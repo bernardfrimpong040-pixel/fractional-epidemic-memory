@@ -1,0 +1,264 @@
+country,date,day,cum_raw,cum_clean,adjusted
+Guinea,2014-03-22,0,49.0,49.0,False
+Guinea,2014-03-24,2,86.0,86.0,False
+Guinea,2014-03-25,3,86.0,86.0,False
+Guinea,2014-03-26,4,86.0,86.0,False
+Guinea,2014-03-27,5,103.0,103.0,False
+Guinea,2014-03-28,6,112.0,112.0,False
+Guinea,2014-03-29,7,112.0,112.0,False
+Guinea,2014-03-31,9,122.0,122.0,False
+Guinea,2014-04-01,10,127.0,127.0,False
+Guinea,2014-04-04,13,143.0,143.0,False
+Guinea,2014-04-07,16,151.0,151.0,False
+Guinea,2014-04-09,18,158.0,158.0,False
+Guinea,2014-04-11,20,159.0,159.0,False
+Guinea,2014-04-14,23,168.0,168.0,False
+Guinea,2014-04-16,25,197.0,197.0,False
+Guinea,2014-04-17,26,203.0,203.0,False
+Guinea,2014-04-20,29,208.0,208.0,False
+Guinea,2014-04-23,32,218.0,218.0,False
+Guinea,2014-04-26,35,224.0,224.0,False
+Guinea,2014-05-01,40,226.0,226.0,False
+Guinea,2014-05-03,42,231.0,231.0,False
+Guinea,2014-05-05,44,235.0,234.7,True
+Guinea,2014-05-07,46,236.0,234.7,True
+Guinea,2014-05-10,49,233.0,234.7,True
+Guinea,2014-05-12,51,248.0,248.0,False
+Guinea,2014-05-23,62,258.0,258.0,False
+Guinea,2014-05-27,66,281.0,281.0,False
+Guinea,2014-05-28,67,291.0,291.0,False
+Guinea,2014-06-01,71,328.0,328.0,False
+Guinea,2014-06-03,73,344.0,344.0,False
+Guinea,2014-06-10,80,351.0,351.0,False
+Guinea,2014-06-16,86,398.0,392.7,True
+Guinea,2014-06-18,88,390.0,392.7,True
+Guinea,2014-06-20,90,390.0,392.7,True
+Guinea,2014-06-30,100,413.0,409.6,True
+Guinea,2014-07-02,102,412.0,409.6,True
+Guinea,2014-07-06,106,408.0,409.6,True
+Guinea,2014-07-08,108,409.0,409.6,True
+Guinea,2014-07-12,112,406.0,409.6,True
+Guinea,2014-07-14,114,411.0,410.5,True
+Guinea,2014-07-17,117,410.0,410.5,True
+Guinea,2014-07-20,120,415.0,415.0,False
+Guinea,2014-07-23,123,427.0,427.0,False
+Guinea,2014-07-27,127,460.0,460.0,False
+Guinea,2014-07-30,130,472.0,472.0,False
+Guinea,2014-08-01,132,485.0,485.0,False
+Guinea,2014-08-04,135,495.0,495.0,False
+Guinea,2014-08-06,137,495.0,495.0,False
+Guinea,2014-08-09,140,506.0,506.0,False
+Guinea,2014-08-11,142,510.0,510.0,False
+Guinea,2014-08-13,144,519.0,519.0,False
+Guinea,2014-08-16,147,543.0,543.0,False
+Guinea,2014-08-18,149,579.0,579.0,False
+Guinea,2014-08-20,151,607.0,607.0,False
+Guinea,2014-08-26,157,648.0,648.0,False
+Guinea,2014-08-31,162,771.0,771.0,False
+Guinea,2014-09-05,167,812.0,812.0,False
+Guinea,2014-09-07,169,861.0,861.0,False
+Guinea,2014-09-10,172,899.0,899.0,False
+Guinea,2014-09-13,175,936.0,936.0,False
+Guinea,2014-09-14,176,942.0,942.0,False
+Guinea,2014-09-19,181,1008.0,1008.0,False
+Guinea,2014-09-21,183,1022.0,1022.0,False
+Guinea,2014-09-23,185,1074.0,1074.0,False
+Guinea,2014-09-28,190,1157.0,1157.0,False
+Guinea,2014-10-01,193,1199.0,1199.0,False
+Guinea,2014-10-05,197,1298.0,1298.0,False
+Guinea,2014-10-07,199,1350.0,1350.0,False
+Guinea,2014-10-12,204,1472.0,1472.0,False
+Guinea,2014-10-14,206,1519.0,1519.0,False
+Guinea,2014-10-19,211,1540.0,1540.0,False
+Guinea,2014-10-21,213,1553.0,1553.0,False
+Guinea,2014-10-27,219,1906.0,1766.0,True
+Guinea,2014-10-29,221,1667.0,1766.0,True
+Guinea,2014-11-02,225,1731.0,1766.0,True
+Guinea,2014-11-03,226,1760.0,1766.0,True
+Guinea,2014-11-09,232,1878.0,1878.0,False
+Guinea,2014-11-11,234,1919.0,1919.0,False
+Guinea,2014-11-16,239,1971.0,1971.0,False
+Guinea,2014-11-18,241,2047.0,2047.0,False
+Guinea,2014-11-23,246,2134.0,2134.0,False
+Guinea,2014-11-30,253,2164.0,2164.0,False
+Guinea,2014-12-07,260,2292.0,2292.0,False
+Guinea,2014-12-14,267,2416.0,2416.0,False
+Guinea,2014-12-20,273,2571.0,2571.0,False
+Guinea,2014-12-21,274,2597.0,2597.0,False
+Guinea,2014-12-24,277,2630.0,2630.0,False
+Guinea,2014-12-27,280,2695.0,2695.0,False
+Guinea,2014-12-28,281,2706.0,2706.0,False
+Guinea,2014-12-31,284,2730.0,2730.0,False
+Guinea,2015-01-03,287,2769.0,2769.0,False
+Guinea,2015-01-04,288,2775.0,2775.0,False
+Guinea,2015-01-05,289,2776.0,2776.0,False
+Liberia,2014-03-27,5,8.0,5.5,True
+Liberia,2014-03-28,6,3.0,5.5,True
+Liberia,2014-03-29,7,7.0,7.0,False
+Liberia,2014-03-31,9,8.0,8.0,False
+Liberia,2014-04-01,10,8.0,8.0,False
+Liberia,2014-04-04,13,18.0,18.0,False
+Liberia,2014-04-07,16,21.0,18.0,True
+Liberia,2014-04-09,18,25.0,18.0,True
+Liberia,2014-04-11,20,26.0,18.0,True
+Liberia,2014-04-16,25,27.0,18.0,True
+Liberia,2014-04-17,26,27.0,18.0,True
+Liberia,2014-04-21,30,34.0,18.0,True
+Liberia,2014-04-24,33,35.0,18.0,True
+Liberia,2014-05-01,40,13.0,18.0,True
+Liberia,2014-05-03,42,13.0,18.0,True
+Liberia,2014-05-05,44,13.0,18.0,True
+Liberia,2014-05-07,46,13.0,18.0,True
+Liberia,2014-05-10,49,12.0,18.0,True
+Liberia,2014-05-12,51,12.0,18.0,True
+Liberia,2014-05-23,62,12.0,18.0,True
+Liberia,2014-05-27,66,12.0,18.0,True
+Liberia,2014-05-28,67,13.0,18.0,True
+Liberia,2014-06-01,71,13.0,18.0,True
+Liberia,2014-06-03,73,13.0,18.0,True
+Liberia,2014-06-05,75,13.0,18.0,True
+Liberia,2014-06-10,80,13.0,18.0,True
+Liberia,2014-06-16,86,33.0,33.0,False
+Liberia,2014-06-19,89,41.0,41.0,False
+Liberia,2014-06-22,92,51.0,51.0,False
+Liberia,2014-06-30,100,107.0,107.0,False
+Liberia,2014-07-02,102,115.0,115.0,False
+Liberia,2014-07-06,106,131.0,131.0,False
+Liberia,2014-07-08,108,142.0,142.0,False
+Liberia,2014-07-12,112,172.0,172.0,False
+Liberia,2014-07-14,114,174.0,174.0,False
+Liberia,2014-07-17,117,196.0,196.0,False
+Liberia,2014-07-20,120,224.0,224.0,False
+Liberia,2014-07-23,123,249.0,249.0,False
+Liberia,2014-07-27,127,329.0,329.0,False
+Liberia,2014-07-30,130,391.0,391.0,False
+Liberia,2014-08-01,132,468.0,468.0,False
+Liberia,2014-08-04,135,516.0,516.0,False
+Liberia,2014-08-06,137,554.0,554.0,False
+Liberia,2014-08-09,140,599.0,599.0,False
+Liberia,2014-08-11,142,670.0,670.0,False
+Liberia,2014-08-13,144,786.0,786.0,False
+Liberia,2014-08-16,147,834.0,834.0,False
+Liberia,2014-08-18,149,972.0,972.0,False
+Liberia,2014-08-20,151,1082.0,1082.0,False
+Liberia,2014-08-26,157,1378.0,1378.0,False
+Liberia,2014-08-31,162,1698.0,1698.0,False
+Liberia,2014-09-05,167,1871.0,1871.0,False
+Liberia,2014-09-07,169,2081.0,2081.0,False
+Liberia,2014-09-09,171,2407.0,2407.0,False
+Liberia,2014-09-14,176,2710.0,2710.0,False
+Liberia,2014-09-17,179,3022.0,3022.0,False
+Liberia,2014-09-21,183,3280.0,3280.0,False
+Liberia,2014-09-23,185,3458.0,3458.0,False
+Liberia,2014-09-28,190,3696.0,3696.0,False
+Liberia,2014-10-01,193,3834.0,3834.0,False
+Liberia,2014-10-04,196,3924.0,3924.0,False
+Liberia,2014-10-07,199,4076.0,4076.0,False
+Liberia,2014-10-11,203,4249.0,4249.0,False
+Liberia,2014-10-13,205,4262.0,4262.0,False
+Liberia,2014-10-18,210,4665.0,4665.0,False
+Liberia,2014-10-25,217,6535.0,6530.0,True
+Liberia,2014-10-31,223,6525.0,6530.0,True
+Liberia,2014-11-04,227,6619.0,6619.0,False
+Liberia,2014-11-08,231,6822.0,6822.0,False
+Liberia,2014-11-10,233,6878.0,6878.0,False
+Liberia,2014-11-15,238,7069.0,7069.0,False
+Liberia,2014-11-18,241,7082.0,7082.0,False
+Liberia,2014-11-22,245,7168.0,7168.0,False
+Liberia,2014-11-28,251,7635.0,7635.0,False
+Liberia,2014-12-03,256,7719.0,7719.0,False
+Liberia,2014-12-09,262,7797.0,7797.0,False
+Liberia,2014-12-18,271,7830.0,7830.0,False
+Liberia,2014-12-20,273,7862.0,7862.0,False
+Liberia,2014-12-24,277,7977.0,7977.0,False
+Liberia,2014-12-28,281,8018.0,8018.0,False
+Liberia,2014-12-31,284,8115.0,8115.0,False
+Liberia,2015-01-02,286,8157.0,8157.0,False
+Liberia,2015-01-03,287,8166.0,8166.0,False
+Sierra Leone,2014-03-27,5,6.0,1.6,True
+Sierra Leone,2014-03-28,6,2.0,1.6,True
+Sierra Leone,2014-03-31,9,2.0,1.6,True
+Sierra Leone,2014-04-01,10,2.0,1.6,True
+Sierra Leone,2014-04-04,13,2.0,1.6,True
+Sierra Leone,2014-04-07,16,2.0,1.6,True
+Sierra Leone,2014-04-09,18,2.0,1.6,True
+Sierra Leone,2014-04-11,20,2.0,1.6,True
+Sierra Leone,2014-04-15,24,12.0,1.6,True
+Sierra Leone,2014-04-22,31,0.0,1.6,True
+Sierra Leone,2014-04-23,32,0.0,1.6,True
+Sierra Leone,2014-04-24,33,0.0,1.6,True
+Sierra Leone,2014-04-26,35,0.0,1.6,True
+Sierra Leone,2014-05-01,40,0.0,1.6,True
+Sierra Leone,2014-05-03,42,0.0,1.6,True
+Sierra Leone,2014-05-05,44,0.0,1.6,True
+Sierra Leone,2014-05-07,46,0.0,1.6,True
+Sierra Leone,2014-05-10,49,0.0,1.6,True
+Sierra Leone,2014-05-12,51,0.0,1.6,True
+Sierra Leone,2014-05-23,62,0.0,1.6,True
+Sierra Leone,2014-05-27,66,16.0,16.0,False
+Sierra Leone,2014-05-28,67,50.0,50.0,False
+Sierra Leone,2014-06-01,71,79.0,79.0,False
+Sierra Leone,2014-06-05,75,81.0,81.0,False
+Sierra Leone,2014-06-10,80,89.0,89.0,False
+Sierra Leone,2014-06-17,87,97.0,97.0,False
+Sierra Leone,2014-06-18,88,136.0,136.0,False
+Sierra Leone,2014-06-20,90,158.0,158.0,False
+Sierra Leone,2014-06-30,100,239.0,239.0,False
+Sierra Leone,2014-07-02,102,252.0,252.0,False
+Sierra Leone,2014-07-06,106,305.0,305.0,False
+Sierra Leone,2014-07-08,108,337.0,337.0,False
+Sierra Leone,2014-07-12,112,386.0,386.0,False
+Sierra Leone,2014-07-14,114,397.0,397.0,False
+Sierra Leone,2014-07-17,117,442.0,442.0,False
+Sierra Leone,2014-07-20,120,454.0,454.0,False
+Sierra Leone,2014-07-23,123,525.0,525.0,False
+Sierra Leone,2014-07-27,127,533.0,533.0,False
+Sierra Leone,2014-07-30,130,574.0,574.0,False
+Sierra Leone,2014-08-01,132,646.0,646.0,False
+Sierra Leone,2014-08-04,135,691.0,691.0,False
+Sierra Leone,2014-08-06,137,717.0,717.0,False
+Sierra Leone,2014-08-09,140,730.0,730.0,False
+Sierra Leone,2014-08-11,142,783.0,783.0,False
+Sierra Leone,2014-08-13,144,810.0,810.0,False
+Sierra Leone,2014-08-16,147,848.0,848.0,False
+Sierra Leone,2014-08-18,149,907.0,907.0,False
+Sierra Leone,2014-08-20,151,910.0,910.0,False
+Sierra Leone,2014-08-26,157,1026.0,1026.0,False
+Sierra Leone,2014-08-31,162,1216.0,1216.0,False
+Sierra Leone,2014-09-05,167,1261.0,1261.0,False
+Sierra Leone,2014-09-07,169,1424.0,1424.0,False
+Sierra Leone,2014-09-10,172,1478.0,1478.0,False
+Sierra Leone,2014-09-13,175,1620.0,1620.0,False
+Sierra Leone,2014-09-14,176,1673.0,1673.0,False
+Sierra Leone,2014-09-20,182,1813.0,1813.0,False
+Sierra Leone,2014-09-21,183,1940.0,1940.0,False
+Sierra Leone,2014-09-23,185,2021.0,2021.0,False
+Sierra Leone,2014-09-28,190,2304.0,2304.0,False
+Sierra Leone,2014-10-01,193,2437.0,2437.0,False
+Sierra Leone,2014-10-05,197,2789.0,2789.0,False
+Sierra Leone,2014-10-08,200,2950.0,2950.0,False
+Sierra Leone,2014-10-12,204,3252.0,3252.0,False
+Sierra Leone,2014-10-14,206,3410.0,3410.0,False
+Sierra Leone,2014-10-19,211,3706.0,3706.0,False
+Sierra Leone,2014-10-22,214,3896.0,3896.0,False
+Sierra Leone,2014-10-27,219,5235.0,5048.5,True
+Sierra Leone,2014-10-29,221,5338.0,5048.5,True
+Sierra Leone,2014-11-02,225,4759.0,5048.5,True
+Sierra Leone,2014-11-04,227,4862.0,5048.5,True
+Sierra Leone,2014-11-09,232,5368.0,5368.0,False
+Sierra Leone,2014-11-11,234,5586.0,5586.0,False
+Sierra Leone,2014-11-16,239,6073.0,6073.0,False
+Sierra Leone,2014-11-18,241,6190.0,6190.0,False
+Sierra Leone,2014-11-23,246,6599.0,6599.0,False
+Sierra Leone,2014-11-30,253,7312.0,7312.0,False
+Sierra Leone,2014-12-07,260,7897.0,7897.0,False
+Sierra Leone,2014-12-14,267,8356.0,8356.0,False
+Sierra Leone,2014-12-20,273,8939.0,8939.0,False
+Sierra Leone,2014-12-21,274,9004.0,9004.0,False
+Sierra Leone,2014-12-24,277,9203.0,9203.0,False
+Sierra Leone,2014-12-27,280,9409.0,9409.0,False
+Sierra Leone,2014-12-28,281,9446.0,9446.0,False
+Sierra Leone,2014-12-31,284,9633.0,9633.0,False
+Sierra Leone,2015-01-03,287,9722.0,9722.0,False
+Sierra Leone,2015-01-04,288,9780.0,9780.0,False
+Sierra Leone,2015-01-05,289,10030.0,10030.0,False

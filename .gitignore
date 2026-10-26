@@ -1,0 +1,15 @@
+# The paper stays off GitHub until it is submitted
+paper/
+
+# Raw downloads are re-created by src/01_download_data.py
+data/raw/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Editors / OS
+.vscode/
+.DS_Store
+Thumbs.db
