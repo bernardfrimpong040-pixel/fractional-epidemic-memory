@@ -17,8 +17,8 @@ Back-ups: Journal of Mathematical Biology, Chaos, Solitons & Fractals.
 |---|---|---|
 | 1 | Data: download, clean, weekly series, figures, checks | **done** |
 | 2 | Models and theory: Caputo SEIR (rates^alpha), Angstmann-Henry-McGann fractional-recovery SIR, integer-order alternatives; existence, uniqueness, positivity, R0, Matignon stability, identifiability proposition | **done** |
-| 3 | Numerical solver: Garrappa predictor-corrector / L1 scheme, Mittag-Leffler convergence test | next |
-| 4 | Synthetic tests: does memoryless data give a spurious alpha < 1? | |
+| 3 | Numerical solver: Garrappa predictor-corrector / L1 scheme, Mittag-Leffler convergence test | **done** |
+| 4 | Synthetic tests: does memoryless data give a spurious alpha < 1? | next |
 | 5 | Fitting to the seven series, profile likelihood for alpha | |
 | 6 | AIC comparison and rolling-origin forecasts | |
 | 7 | Writing, journal template, submission | |
@@ -37,6 +37,9 @@ Fractional_paper/
     models.py                 all five models and every formula of Section 3
     05_check_theory.py        21 numerical checks of the theory (all must PASS)
     06_plot_theory.py         Stage 2 figures
+    solvers.py                PECE and L1 solvers, AHM solver, ODE models
+    07_check_solvers.py       21 solver validation checks (all must PASS)
+    08_plot_solvers.py        Stage 3 figures
   data/
     raw/                      downloads (not on GitHub; re-created by script 01)
     processed/
@@ -48,8 +51,10 @@ Fractional_paper/
   results/
     data_sources.csv          where each file came from, commit, fingerprint
     stage1_data_summary.csv   one line per series (Table 2 of the paper)
+    stage3_convergence.csv    solver errors by step size (Table 5)
   figures/                    data_overview, ebola_cleaning, growth_shape,
-                              memory_kernel, identifiability (.png, .pdf)
+                              memory_kernel, identifiability, solver_convergence,
+                              matched_epidemics, decline_tails (.png, .pdf)
   paper/                      main.tex + figures/ (not on GitHub until submission)
   requirements.txt
 ```
@@ -75,11 +80,19 @@ python src\03_plot_data.py
 python src\04_check_data.py
 python src\05_check_theory.py
 python src\06_plot_theory.py
+python src\07_check_solvers.py
+python src\08_plot_solvers.py
+cd paper
+pdflatex main.tex
+pdflatex main.tex
+cd ..
 ```
 
-`04_check_data.py` should end with `All 12 checks passed.` and
-`05_check_theory.py` with `All 21 checks passed.` (it takes about a minute).
-The other scripts take seconds.
+Expected last lines: `04_check_data.py` `All 12 checks passed.`,
+`05_check_theory.py` `All 21 checks passed.` (about a minute),
+`07_check_solvers.py` `All 21 checks passed.` (about a minute).
+`pdflatex` is run twice so cross-references resolve; the paper is `paper\main.pdf`.
+It needs a local LaTeX installation (MiKTeX or TeX Live); Overleaf works too.
 
 ## Data
 
@@ -130,6 +143,17 @@ All proved in Section 3 of the paper and checked numerically by `05_check_theory
 | Proposition 6 | Early growth is E_a(lambda1 t^a): onset like t^a, then exponential at r = lambda1^(1/a) plus a t^(-a) memory term. |
 | Propositions 7-8 | AHM model is well posed; with no competing removal and alpha < 1 the mean infectious period is infinite and there is NO epidemic threshold. |
 | Proposition 10 | The growth rate r does not identify alpha: every alpha fits r with its own beta, and the implied R0 = (1 + (r/sigma)^a)(1 + (r/gamma)^a) changes with alpha (about 30% higher at alpha = 0.5 when r = gamma/2, sigma = gamma). |
+
+## Numerics (Stage 3): main findings
+
+| Finding | Detail |
+|---|---|
+| Two independent Caputo solvers | Predictor-corrector (order about 1+alpha) and implicit L1 (order 1), as predicted for non-smooth fractional solutions; they agree on the nonlinear model. |
+| Automatic steps | PECE is stable only for h * lambda^(1/alpha) below about 1.6-2.0; the power 1/alpha makes small alpha much stiffer, so daily steps went unstable at alpha = 0.3. L1 loses positivity unless h^(-alpha)/Gamma(2-alpha) > lambda1 (weekly steps, large beta). The AHM solver needs h omega S0 / 2 small and about 80 steps per tau. All three now sub-step automatically and return values on the requested grid. |
+| Same growth, different epidemics | Caputo SEIR epidemics tuned to the same early growth rate differ hugely after the peak (alpha = 0.6 still has 2e4 infectious at week 120). |
+| Tails | Numerically, fractional declines approach power laws t^(-alpha) (by t ~ 6000 weeks), but the Caputo SEIR passes through a long transitional phase (slope from -4 to -0.3), so a tail slope from data does NOT estimate alpha. Integer models decline exponentially. |
+| Independent review | Confirmed weights, L1 discretisation and conservation; found the two positivity problems above (now fixed). |
+| For Stage 5 | Bound alpha from below (cost grows like lambda^(1/alpha)); fix the number of sub-steps per fit (avoids small jumps in the likelihood); use alpha <= 0.9999 or exactly 1 in the AHM model. |
 
 ## GitHub
 

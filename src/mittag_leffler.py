@@ -111,3 +111,70 @@ def ml(z, a, b=1.0):
     z_arr = np.asarray(z, dtype=float)
     out = np.array([ml_scalar(v, a, b) for v in z_arr.ravel()])
     return out.reshape(z_arr.shape) if z_arr.ndim else float(out[0])
+
+
+# ===========================================================================
+# Fast vectorised E_a(-x), x >= 0, 0 < a < 1  (used by the AHM solver)
+# ===========================================================================
+# The integral formula above is evaluated with FIXED Gauss-Legendre rules on
+# a few sub-intervals, all values of x at once (NumPy arrays), so thousands
+# of values take milliseconds. Accuracy is checked against ml() in
+# 07_check_solvers.py (about 1e-12).
+#   u-form (no rescaling):  E_a(-x) = c * int_0^inf exp(-t u^(1/a)) / (u^2 + 2u cos(a pi) + 1) du
+#   with t = x^(1/a) and c = sin(a pi)/(a pi). The denominator has its
+#   smallest value near u = -cos(a pi) (close to u = 1 when a is near 1),
+#   so the sub-intervals are refined around there.
+
+_GL_X, _GL_W = np.polynomial.legendre.leggauss(64)
+
+
+def _gauss_nodes(edges):
+    """Nodes and weights of 64-point Gauss-Legendre rules on each [edges[i], edges[i+1]]."""
+    nodes, weights = [], []
+    for lo, hi in zip(edges[:-1], edges[1:]):
+        nodes.append(0.5 * (hi - lo) * _GL_X + 0.5 * (hi + lo))
+        weights.append(0.5 * (hi - lo) * _GL_W)
+    return np.concatenate(nodes), np.concatenate(weights)
+
+
+def ml_neg_fast(x, a):
+    """E_a(-x) for an array x >= 0 and 0 < a < 1 (fast, about 12 correct digits)."""
+    x = np.asarray(x, dtype=float)
+    if a >= 1.0:
+        return np.exp(-x)                       # E_1(-x) = e^(-x)
+    out = np.empty_like(x)
+    small = x <= 0.5
+    # 1. Small x: the series has no cancellation problem; 60 terms suffice.
+    if np.any(small):
+        xs = x[small]
+        k = np.arange(60)
+        from scipy.special import rgamma
+        out[small] = ((-xs[:, None]) ** k * rgamma(a * k + 1.0)).sum(axis=1)
+    # 2. Larger x: the integral. Two features need resolving:
+    #    - the denominator's minimum near u0 = -cos(a pi), of width ~ sin(a pi);
+    #    - the factor exp(-t u^(1/a)), which falls off where u ~ t^(-a) = 1/x.
+    #    So the sub-interval edges include points around u0 and at multiples
+    #    of 1/x; each value of x gets its own set of nodes.
+    if np.any(~small):
+        c = math.cos(a * math.pi)
+        u0 = max(-c, 0.0)
+        # near a = 1 the denominator's dip at u0 becomes very narrow (width
+        # sin(a pi)), so we refine around it on several scales
+        width = max(math.sin(a * math.pi), 1e-12)
+        fixed = {0.0, u0, 4.0, 20.0}
+        for mult in (1.0, 4.0, 16.0, 64.0, 256.0):
+            fixed |= {max(u0 - mult * width, 0.0), u0 + mult * width}
+        vn, vw = _gauss_nodes([0.0, 1.0])          # tail [20, inf): u = 20 / v
+        tail_u, tail_w = 20.0 / vn, vw * 20.0 / vn ** 2
+        const = math.sin(a * math.pi) / (a * math.pi)
+        idx = np.flatnonzero(~small)
+        for i in idx:
+            xi = x[i]
+            t = xi ** (1.0 / a)
+            scale = {e / xi for e in (0.2, 1.0, 5.0, 30.0) if e / xi < 20.0}
+            un, uw = _gauss_nodes(sorted(fixed | scale))
+            u = np.concatenate([un, tail_u])
+            w = np.concatenate([uw, tail_w])
+            vals = np.exp(-t * u ** (1.0 / a)) / (u * u + 2.0 * u * c + 1.0)
+            out[i] = const * (vals @ w)
+    return out
