@@ -16,8 +16,8 @@ Back-ups: Journal of Mathematical Biology, Chaos, Solitons & Fractals.
 | Stage | Content | Status |
 |---|---|---|
 | 1 | Data: download, clean, weekly series, figures, checks | **done** |
-| 2 | Models and theory: Caputo SEIR (rates^alpha), Angstmann-Henry-McGann fractional-recovery SIR, integer-order alternatives; existence, uniqueness, positivity, R0, Matignon stability, identifiability proposition | next |
-| 3 | Numerical solver: Garrappa predictor-corrector / L1 scheme, Mittag-Leffler convergence test | |
+| 2 | Models and theory: Caputo SEIR (rates^alpha), Angstmann-Henry-McGann fractional-recovery SIR, integer-order alternatives; existence, uniqueness, positivity, R0, Matignon stability, identifiability proposition | **done** |
+| 3 | Numerical solver: Garrappa predictor-corrector / L1 scheme, Mittag-Leffler convergence test | next |
 | 4 | Synthetic tests: does memoryless data give a spurious alpha < 1? | |
 | 5 | Fitting to the seven series, profile likelihood for alpha | |
 | 6 | AIC comparison and rolling-origin forecasts | |
@@ -33,6 +33,10 @@ Fractional_paper/
     02_clean_data.py          build the 7 weekly series + summary table
     03_plot_data.py           Stage 1 figures
     04_check_data.py          12 independent checks (all must PASS)
+    mittag_leffler.py         Mittag-Leffler function E_{a,b}(z) (series + integral formula)
+    models.py                 all five models and every formula of Section 3
+    05_check_theory.py        21 numerical checks of the theory (all must PASS)
+    06_plot_theory.py         Stage 2 figures
   data/
     raw/                      downloads (not on GitHub; re-created by script 01)
     processed/
@@ -44,7 +48,8 @@ Fractional_paper/
   results/
     data_sources.csv          where each file came from, commit, fingerprint
     stage1_data_summary.csv   one line per series (Table 2 of the paper)
-  figures/                    data_overview, ebola_cleaning, growth_shape (.png, .pdf)
+  figures/                    data_overview, ebola_cleaning, growth_shape,
+                              memory_kernel, identifiability (.png, .pdf)
   paper/                      main.tex + figures/ (not on GitHub until submission)
   requirements.txt
 ```
@@ -68,10 +73,13 @@ python src\01_download_data.py
 python src\02_clean_data.py
 python src\03_plot_data.py
 python src\04_check_data.py
+python src\05_check_theory.py
+python src\06_plot_theory.py
 ```
 
-The last line printed should be `All 12 checks passed.` Everything runs in
-under a minute.
+`04_check_data.py` should end with `All 12 checks passed.` and
+`05_check_theory.py` with `All 21 checks passed.` (it takes about a minute).
+The other scripts take seconds.
 
 ## Data
 
@@ -109,6 +117,19 @@ under a minute.
    (running total 4,665 -> 6,535 in a week), and the 28 Dec 2025 holiday
    backlog in South Carolina (174) and Short Creek (79). Flags are kept as a
    column, not deleted.
+
+## Theory (Stage 2): main results
+
+All proved in Section 3 of the paper and checked numerically by `05_check_theory.py`.
+
+| Result | Statement |
+|---|---|
+| Theorem 3 | Caputo SEIR has a unique solution for all time that stays non-negative and bounded. The proof avoids the invalid argument "non-negative Caputo derivative implies non-decreasing" (Diethelm 2016). |
+| Proposition 4 | R0 = beta^a sigma^a / ((sigma^a + mu^a)(gamma^a + mu^a)); for an outbreak (mu = 0) R0 = (beta/gamma)^a. Endemic equilibrium exists iff R0 > 1. |
+| Theorem 5 | Disease-free state stable iff R0 < 1; endemic state stable whenever it exists; for every alpha (Matignon + Cong et al. 2016, 2017). |
+| Proposition 6 | Early growth is E_a(lambda1 t^a): onset like t^a, then exponential at r = lambda1^(1/a) plus a t^(-a) memory term. |
+| Propositions 7-8 | AHM model is well posed; with no competing removal and alpha < 1 the mean infectious period is infinite and there is NO epidemic threshold. |
+| Proposition 10 | The growth rate r does not identify alpha: every alpha fits r with its own beta, and the implied R0 = (1 + (r/sigma)^a)(1 + (r/gamma)^a) changes with alpha (about 30% higher at alpha = 0.5 when r = gamma/2, sigma = gamma). |
 
 ## GitHub
 

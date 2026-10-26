@@ -125,8 +125,8 @@ MEASLES_OUTBREAKS = {
 # ---------------------------------------------------------------------------
 # 4. Figure colours (validated colour-blind-safe palette, used in fixed order)
 # ---------------------------------------------------------------------------
-COLORS = ["#2a78d6", "#eb6834", "#1baf7a"]   # blue, orange, aqua
-MARKERS = ["o", "s", "^"]                    # shapes, so colour is never the only cue
+COLORS = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100"]   # blue, orange, aqua, yellow
+MARKERS = ["o", "s", "^", "D"]       # shapes, so colour is never the only cue
 TEXT_DARK = "#0b0b0b"
 TEXT_SOFT = "#52514e"
 GRID = "#e4e3df"
