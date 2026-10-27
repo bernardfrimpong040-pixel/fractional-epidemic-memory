@@ -282,3 +282,66 @@ def ahm_transmission_for_growth_rate(r, tau, alpha, gamma_c=0.0):
     """Proposition 10(b): omega S0 = 1/phi_hat(gamma_c + r) = q + tau^-a q^(1-a), q = gamma_c + r."""
     q = gamma_c + r
     return q + tau ** (-alpha) * q ** (1.0 - alpha)
+
+
+# ===========================================================================
+# 5. AHM model with a latent stage (AHM-SEIR), used to fit real data (Stage 5)
+# ===========================================================================
+# S' = -beta S I,  E' = beta S I - sigma E,
+# I(t) = int_0^t Phi(t-u) sigma E(u) du   (we always start with I(0) = 0),
+# Phi(t) = E_a(-(t/tau)^a) exp(-gamma_c t)   (Mittag-Leffler survival, as in AHM).
+#
+# To compare it with the SEIR model on equal terms we tie tau and gamma_c to
+# the fixed infectious rate gamma:  tau = 2/gamma, gamma_c = gamma/2.
+# Then the MEAN infectious period phi_hat(gamma_c) = 1/(gamma_c + tau^-a gamma_c^(1-a))
+#   = 1/(gamma/2 + (gamma/2)^a (gamma/2)^(1-a)) = 1/gamma   for EVERY alpha,
+# and at alpha = 1, Phi(t) = exp(-gamma t/2) exp(-gamma t/2) = exp(-gamma t):
+# the model is exactly the SEIR model. Lowering alpha keeps the mean
+# infectious period but makes its distribution more spread out (some people
+# recover very fast, a few stay infectious much longer).
+# R0 = beta x mean infectious period = beta / gamma for every alpha.
+
+
+def ahm_seir_tau_gc(gamma):
+    """(tau, gamma_c) for the AHM-SEIR model: tau = 2/gamma, gamma_c = gamma/2."""
+    return 2.0 / gamma, gamma / 2.0
+
+
+def ahm_seir_r0(beta, gamma):
+    """R0 = beta / gamma (the same for every alpha, see above)."""
+    return beta / gamma
+
+
+def ahm_seir_beta_for_growth_rate(r, sigma, gamma, alpha):
+    """beta giving early growth rate r (Euler-Lotka equation).
+
+    A new infection produces, on average, beta x (time spent infectious) new
+    infections, spread over time. Growth at rate r requires
+        1 = beta * sigma/(sigma + r) * phi_hat(gamma_c + r),
+    where sigma/(sigma + r) discounts the latent stage and
+    phi_hat(gamma_c + r) = int e^(-r t) Phi(t) dt the infectious stage. So
+        beta = (sigma + r) / (sigma * phi_hat(gamma_c + r)).
+    At alpha = 1, phi_hat(gamma_c + r) = 1/(gamma + r): the SEIR formula.
+    """
+    tau, gc = ahm_seir_tau_gc(gamma)
+    return (sigma + r) / (sigma * ahm_phi_hat(gc + r, tau, alpha))
+
+
+def ahm_seir_growth_rate(beta, sigma, gamma, alpha):
+    """Early growth rate r of the AHM-SEIR model (root of the equation above).
+
+    beta * sigma/(sigma + r) * phi_hat(gamma_c + r) falls as r grows, so there
+    is exactly one root; we find it on the log scale for safety.
+    If even the slowest allowed decline is too fast (no root above the lower
+    limit -0.999 min(sigma, gamma_c)), that lower limit is returned.
+    """
+    tau, gc = ahm_seir_tau_gc(gamma)
+    r_lo = -0.999 * min(sigma, gc)
+    h = lambda r: (math.log(beta) + math.log(sigma) - math.log(sigma + r)
+                   + math.log(ahm_phi_hat(gc + r, tau, alpha)))
+    hi = 1.0
+    while h(hi) > 0:
+        hi *= 2.0
+    if h(r_lo) < 0:
+        return r_lo
+    return brentq(h, r_lo, hi, xtol=1e-13, rtol=1e-13, maxiter=500)

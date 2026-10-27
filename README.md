@@ -19,8 +19,8 @@ Back-ups: Journal of Mathematical Biology, Chaos, Solitons & Fractals.
 | 2 | Models and theory: Caputo SEIR (rates^alpha), Angstmann-Henry-McGann fractional-recovery SIR, integer-order alternatives; existence, uniqueness, positivity, R0, Matignon stability, identifiability proposition | **done** |
 | 3 | Numerical solver: Garrappa predictor-corrector / L1 scheme, Mittag-Leffler convergence test | **done** |
 | 4 | Synthetic tests: does memoryless data give a spurious alpha < 1? | **done** |
-| 5 | Fitting to the seven series, profile likelihood for alpha | next |
-| 6 | AIC comparison and rolling-origin forecasts | |
+| 5 | Fitting to the seven series: profile likelihoods, bootstrap-calibrated tests, memoryless alternatives | **done** |
+| 6 | AIC comparison and rolling-origin forecasts | next |
 | 7 | Writing, journal template, submission | |
 
 ## Project layout
@@ -46,6 +46,10 @@ Fractional_paper/
     10_synthetic_experiments.py  Stage 4 experiment (noise-free, noisy, calibration,
                               robustness and validation fits)
     11_plot_synthetic.py      Stage 4 figures
+    outbreaks.py              the 7 real series and the latent/infectious periods used
+    12_check_real_fitting.py  20 checks of the Stage 5 code (all must PASS)
+    13_fit_outbreaks.py       Stage 5: fits, sensitivity, pseudo-true alpha, bootstrap
+    14_plot_outbreaks.py      Stage 5 figures
   data/
     raw/                      downloads (not on GitHub; re-created by script 01)
     processed/
@@ -72,10 +76,21 @@ Fractional_paper/
     stage4_validation.csv     checks of the early stop and interval interpolation
     stage4_gain_by_phase.csv  where the fractional fit gains (before/after the peak)
     stage4_substeps_gamma*.csv     solver settings for the wrong-gamma fits
+    stage5_substeps.csv       solver settings per disease, model and gamma factor
+    stage5_profiles.csv       every profile point of every real-data fit
+    stage5_fits.csv           alpha-hat, interval and LRT per series, variant, model
+    stage5_alt_fits.csv       the four memoryless models fitted to each series
+    stage5_pseudotrue.csv     alpha* each fitted memoryless model would produce
+    stage5_bootstrap.csv      1,050 refits to simulated data (parametric bootstrap)
+    stage5_residuals.csv      randomised quantile residuals
+    stage5_summary.csv        one row per series and fractional model (final numbers)
+    stage5_sensitivity.csv    alpha-hat for gamma x 0.8 / 1.2, spikes masked, peak + 4 weeks
   figures/                    data_overview, ebola_cleaning, growth_shape,
                               memory_kernel, identifiability, solver_convergence,
                               matched_epidemics, decline_tails, pseudotrue_profiles,
-                              replicate_alpha, test_calibration, example_fits (.png, .pdf)
+                              replicate_alpha, test_calibration, example_fits,
+                              outbreak_fits, outbreak_profiles, outbreak_bootstrap,
+                              outbreak_sensitivity, outbreak_residuals (.png, .pdf)
   paper/                      main.tex + figures/ (not on GitHub until submission)
   requirements.txt
 ```
@@ -106,6 +121,9 @@ python src\08_plot_solvers.py
 python src\09_check_fitting.py
 python src\10_synthetic_experiments.py
 python src\11_plot_synthetic.py
+python src\12_check_real_fitting.py
+python src\13_fit_outbreaks.py
+python src\14_plot_outbreaks.py
 cd paper
 pdflatex main.tex
 pdflatex main.tex
@@ -115,7 +133,8 @@ cd ..
 Expected last lines: `04_check_data.py` `All 12 checks passed.`,
 `05_check_theory.py` `All 21 checks passed.` (about a minute),
 `07_check_solvers.py` `All 21 checks passed.` (about a minute),
-`09_check_fitting.py` `All 19 checks passed.` (about two minutes).
+`09_check_fitting.py` `All 19 checks passed.` (about two minutes),
+`12_check_real_fitting.py` `All 20 checks passed.` (about three minutes).
 
 `10_synthetic_experiments.py` is the long one: about 1,300 profile-likelihood
 fits of 10-20 seconds each, run in parallel (roughly 5 hours on 2 cores, 2.5 on
@@ -123,6 +142,9 @@ fits of 10-20 seconds each, run in parallel (roughly 5 hours on 2 cores, 2.5 on
 every fit done and only rebuilds the summary tables (about a minute). To redo
 everything from scratch: `python src\10_synthetic_experiments.py --fresh`. If
 interrupted, run it again: finished fits are kept.
+`13_fit_outbreaks.py` is the other long one (about 1,100 fits, roughly 7 hours on
+2 cores); its results are included too, so it also only rebuilds the summaries.
+`--skip-bootstrap` leaves out the bootstrap (minutes instead of hours).
 `pdflatex` is run twice so cross-references resolve; the paper is `paper\main.pdf`.
 It needs a local LaTeX installation (MiKTeX or TeX Live); Overleaf works too.
 
@@ -211,6 +233,35 @@ alpha* = where the fit converges with unlimited data (Poisson counts).
 - With noisy counts (k = 10) the nominal 5% test rejects alpha = 1 in 12% of
   ordinary-SEIR data sets: tests must be calibrated (Stage 5: parametric bootstrap).
 - The fractional fit reports an R0 18-30% larger than the ordinary fit.
+
+## Outbreak fits (Stage 5): main findings
+
+Latent / infectious periods fixed from the literature (mpox 5.6 / 2.9 days,
+Ebola 11.4 / 3.9, measles 10 / 8). p_boot: parametric bootstrap from the fitted
+ordinary SEIR (60 data sets; "<0.02" = none reached the real statistic).
+
+| Series | Caputo alpha-hat (95% CI) | LRT | p_boot | AHM-SEIR LRT |
+|---|---|---|---|---|
+| mpox, US | **0.635 (0.624-0.646)** | 126.8 | <0.02 | 0.43 |
+| Ebola, Guinea | 0.40 (0.40-0.88) | 5.72 | <0.02 | 0.82 |
+| Ebola, Liberia | 0.76 (0.40-1.00) | 0.59 | 0.21 | 0.00 |
+| Ebola, Sierra Leone | 1.00 (0.46-1.00) | 0.00 | 1.00 | 0.00 |
+| Measles, West Texas | 1.00 (0.69-1.00) | 0.00 | 1.00 | 1.18 |
+| Measles, Upstate SC | 0.92 (0.81-1.00) | 3.06 | 0.10 | 0.00 |
+| Measles, Short Creek | 0.86 (0.40-1.00) | 0.77 | 0.30 | 0.00 |
+
+- Only mpox shows strong "memory" in the Caputo model, and a MEMORYLESS model
+  (heterogeneous recovery: a tiny minority stays infectious for long) fits almost
+  as well (log-likelihood gain 61.7 vs 63.4) and produces the same order
+  (alpha* = 0.636).
+- The mechanistic fractional model (AHM-SEIR) cannot identify its order from any
+  series: its profiles are flat (within 0.6 log-likelihood units).
+- Weaker signals depend on single reporting spikes (Liberia: 0.76 -> 0.54 when
+  its spike is removed) and on where the data stop (West Texas: 1.00 -> 0.40
+  when cut 4 weeks after the peak). gamma +-20% changes nothing.
+- Even data simulated from the ordinary SEIR give alpha-hat < 0.9 in 38% of cases.
+- The Caputo profile can jump at alpha = 1 (long near-zero tails penalise the
+  power-law tail of every alpha < 1).
 
 ## GitHub
 

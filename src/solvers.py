@@ -22,6 +22,7 @@ COST
     milliseconds.
 """
 
+import functools
 import math
 
 import numpy as np
@@ -377,3 +378,125 @@ def apply_reporting_delay(weekly_cases, mean, shape, rho_rep=1.0):
     c = np.asarray(weekly_cases, dtype=float)
     h = M.gamma_delay_weights(mean, shape, len(c))
     return rho_rep * np.convolve(c, h)[: len(c)]
+
+
+# ===========================================================================
+# 4. AHM model with a latent stage (AHM-SEIR), Stage 5
+# ===========================================================================
+
+@functools.lru_cache(maxsize=64)
+def _ahm_seir_weights(gamma, alpha, dt, N):
+    """Product-integration weights for  int_0^{t_n} Phi(t_n - u) J(u) du.
+
+    WHY NOT THE PLAIN TRAPEZOID RULE? Just after entering I, Phi falls like
+    1 - c t^alpha, which is infinitely steep at t = 0 when alpha < 1. The
+    trapezoid rule samples Phi only at grid points and so converges slowly
+    there. Instead we treat J (smooth) as piecewise linear between grid
+    points and integrate Phi EXACTLY against each piece ("product
+    integration"; Linz 1985). With lag s = t_n - u and, on lag interval
+    m (s between (m-1) dt and m dt),
+        a_m = int Phi(s) ds,   b_m = int ((s - (m-1) dt)/dt) Phi(s) ds,
+    the weight of J at lag m is
+        W_0 = a_1 - b_1 (the newest value),
+        W_m = b_m + a_{m+1} - b_{m+1}  (0 < m < n),
+        B_n = b_n (the oldest value, J_0, at lag n).
+    a_m and b_m are computed with 6-point Gauss-Legendre rules; the first
+    interval, where Phi is steep, is split into 40 pieces that halve in
+    length towards s = 0.
+
+    The weights do not depend on beta or e0, so during a fit they are
+    computed once per (gamma, alpha, step) and then reused (lru_cache).
+    """
+    tau, gc = M.ahm_seir_tau_gc(gamma)
+    xg, wg = np.polynomial.legendre.leggauss(6)
+    xg, wg = 0.5 * (xg + 1.0), 0.5 * wg                    # nodes on [0, 1]
+    # intervals 2..N: s = (m - 1 + x) dt
+    m = np.arange(2, N + 2)                                # one extra for a_{N+1}
+    s_nodes = (m[:, None] - 1 + xg[None, :]) * dt
+    phi = ahm_survival(s_nodes.ravel(), tau, alpha, gc).reshape(s_nodes.shape)
+    a = np.zeros(N + 2)            # a[0], b[0] are not used
+    b = np.zeros(N + 2)
+    a[2:] = dt * phi @ wg
+    b[2:] = dt * phi @ (wg * xg)
+    # interval 1, graded: pieces [2^-(j+1), 2^-j] of [0, 1] for j = 0..39
+    # (the tiny piece [0, 2^-40] left out changes a_1 by less than 1e-12 dt)
+    lo = 0.5 ** np.arange(1, 41)
+    hi = 0.5 ** np.arange(0, 40)
+    v = (lo[:, None] + (hi - lo)[:, None] * xg[None, :]).ravel()   # fraction of dt
+    w = ((hi - lo)[:, None] * wg[None, :]).ravel()
+    phi1 = ahm_survival(v * dt, tau, alpha, gc)
+    a[1] = dt * np.sum(w * phi1)
+    b[1] = dt * np.sum(w * v * phi1)
+    W = np.empty(N + 1)
+    W[0] = a[1] - b[1]
+    W[1:] = b[1:N + 1] + a[2:N + 2] - b[2:N + 2]
+    B = b[: N + 1].copy()
+    W.setflags(write=False)
+    B.setflags(write=False)
+    return W, B
+
+
+def solve_ahm_seir(beta, sigma, gamma, alpha, e0, T, h, substeps):
+    """AHM-SEIR on population FRACTIONS (S + E + I + R = 1), see models.py.
+
+        S' = -beta S I,      E' = beta S I - sigma E,
+        I(t) = int_0^t Phi(t-u) J(u) du,   J = sigma E (entries into I),
+        Phi(t) = E_a(-(t/tau)^a) exp(-gamma_c t),  tau = 2/gamma, gamma_c = gamma/2.
+    Starts with S = 1 - e0, E = e0, I = R = 0.
+
+    Discretisation on the fine grid t_n = n dt (dt = h / substeps):
+      * S = S0 exp(-beta C), C = int I  (trapezoid rule for C);
+      * E: exact solution of the linear equation with the trapezoid rule for
+        the infection term F = beta S I:
+            E_n = E_{n-1} e^(-sigma dt) + dt/2 (e^(-sigma dt) F_{n-1} + F_n);
+      * I: product integration for the convolution (see _ahm_seir_weights),
+            I_n = B_n J_0 + sum_{j=1}^{n-1} W_{n-j} J_j + W_0 J_n.
+    I_n appears on both sides (through S_n, F_n, E_n and J_n), so each step
+    solves one scalar equation by Newton's method.
+
+    Returns the coarse times t = 0, h, ..., T and a dict with S, E, I and
+    `cumulative` = 1 - S - E (everyone who has ever entered I).
+    """
+    k = int(substeps)
+    dt = h / k
+    N = _n_steps(T, dt)
+    t = dt * np.arange(N + 1)
+    W, B = _ahm_seir_weights(float(gamma), float(alpha), float(dt), N)
+    decay = math.exp(-sigma * dt)
+    S0 = 1.0 - e0
+    I = np.zeros(N + 1)
+    C = np.zeros(N + 1)
+    E = np.zeros(N + 1)
+    F = np.zeros(N + 1)
+    J = np.zeros(N + 1)
+    E[0] = e0
+    J[0] = sigma * e0
+    half = 0.5 * dt
+    for n in range(1, N + 1):
+        # part of the convolution that does not involve the unknown J_n
+        known = B[n] * J[0] + (W[n - 1:0:-1] @ J[1:n] if n > 1 else 0.0)
+        E_known = E[n - 1] * decay + half * decay * F[n - 1]
+        x = I[n - 1]
+        for _ in range(50):
+            Cn = C[n - 1] + half * (I[n - 1] + x)
+            Sn = S0 * math.exp(-beta * Cn)
+            Fn = beta * Sn * x
+            En = E_known + half * Fn
+            g = x - known - W[0] * sigma * En
+            dF = beta * Sn * (1.0 - beta * half * x)
+            dg = 1.0 - W[0] * sigma * half * dF
+            step = -g / dg
+            x += step
+            if abs(step) <= 1e-13 * max(1e-12, abs(x)):
+                break
+        else:
+            raise RuntimeError(f"AHM-SEIR Newton iteration did not converge at t = {t[n]:g}")
+        I[n] = x
+        C[n] = C[n - 1] + half * (I[n - 1] + x)
+        S = S0 * math.exp(-beta * C[n])
+        F[n] = beta * S * x
+        E[n] = E_known + half * F[n]
+        J[n] = sigma * E[n]
+    S = S0 * np.exp(-beta * C)
+    out = {"S": S[::k], "E": E[::k], "I": I[::k], "cumulative": (1.0 - S - E)[::k]}
+    return t[::k], out
