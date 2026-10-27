@@ -18,8 +18,8 @@ Back-ups: Journal of Mathematical Biology, Chaos, Solitons & Fractals.
 | 1 | Data: download, clean, weekly series, figures, checks | **done** |
 | 2 | Models and theory: Caputo SEIR (rates^alpha), Angstmann-Henry-McGann fractional-recovery SIR, integer-order alternatives; existence, uniqueness, positivity, R0, Matignon stability, identifiability proposition | **done** |
 | 3 | Numerical solver: Garrappa predictor-corrector / L1 scheme, Mittag-Leffler convergence test | **done** |
-| 4 | Synthetic tests: does memoryless data give a spurious alpha < 1? | next |
-| 5 | Fitting to the seven series, profile likelihood for alpha | |
+| 4 | Synthetic tests: does memoryless data give a spurious alpha < 1? | **done** |
+| 5 | Fitting to the seven series, profile likelihood for alpha | next |
 | 6 | AIC comparison and rolling-origin forecasts | |
 | 7 | Writing, journal template, submission | |
 
@@ -34,12 +34,18 @@ Fractional_paper/
     03_plot_data.py           Stage 1 figures
     04_check_data.py          12 independent checks (all must PASS)
     mittag_leffler.py         Mittag-Leffler function E_{a,b}(z) (series + integral formula)
-    models.py                 all five models and every formula of Section 3
+    models.py                 all six models and every formula of Section 3
     05_check_theory.py        21 numerical checks of the theory (all must PASS)
     06_plot_theory.py         Stage 2 figures
     solvers.py                PECE and L1 solvers, AHM solver, ODE models
     07_check_solvers.py       21 solver validation checks (all must PASS)
     08_plot_solvers.py        Stage 3 figures
+    fitting.py                profile-likelihood fitting of the Caputo SEIR (NB counts)
+    synthetic.py              the eight true models of Stage 4 and their data
+    09_check_fitting.py       19 checks of the fitting machinery (all must PASS)
+    10_synthetic_experiments.py  Stage 4 experiment (noise-free, noisy, calibration,
+                              robustness and validation fits)
+    11_plot_synthetic.py      Stage 4 figures
   data/
     raw/                      downloads (not on GitHub; re-created by script 01)
     processed/
@@ -48,13 +54,28 @@ Fractional_paper/
       ebola_weekly.csv
       measles_weekly.csv
       all_series_weekly.csv   all 7 series in one table (used by later stages)
+    synthetic/
+      expected_counts.csv     expected weekly cases of the 8 truths
+      replicates.csv          the 1,230 noisy data sets (reused in Stage 6)
   results/
     data_sources.csv          where each file came from, commit, fingerprint
     stage1_data_summary.csv   one line per series (Table 2 of the paper)
-    stage3_convergence.csv    solver errors by step size (Table 5)
+    stage3_convergence.csv    solver errors by step size (Table 4 of the paper)
+    stage4_substeps.csv       solver and sub-steps used for each alpha in fits
+    stage4_truths.csv         the 8 truths: peak week, totals
+    stage4_pseudotrue_summary.csv / _profiles.csv   noise-free fits (alpha*)
+    stage4_replicate_fits.csv / _profiles.csv       every noisy fit and its whole profile
+    stage4_replicate_results.csv   final numbers per fit (recomputed from profiles)
+    stage4_summary.csv        rejection rates (nominal and calibrated), alpha-hat, R0 ratio
+    stage4_calibration.csv    real size of the test from 200 SEIR data sets per noise level
+    stage4_sensitivity.csv / _profiles.csv          robustness of alpha*
+    stage4_validation.csv     checks of the early stop and interval interpolation
+    stage4_gain_by_phase.csv  where the fractional fit gains (before/after the peak)
+    stage4_substeps_gamma*.csv     solver settings for the wrong-gamma fits
   figures/                    data_overview, ebola_cleaning, growth_shape,
                               memory_kernel, identifiability, solver_convergence,
-                              matched_epidemics, decline_tails (.png, .pdf)
+                              matched_epidemics, decline_tails, pseudotrue_profiles,
+                              replicate_alpha, test_calibration, example_fits (.png, .pdf)
   paper/                      main.tex + figures/ (not on GitHub until submission)
   requirements.txt
 ```
@@ -82,6 +103,9 @@ python src\05_check_theory.py
 python src\06_plot_theory.py
 python src\07_check_solvers.py
 python src\08_plot_solvers.py
+python src\09_check_fitting.py
+python src\10_synthetic_experiments.py
+python src\11_plot_synthetic.py
 cd paper
 pdflatex main.tex
 pdflatex main.tex
@@ -90,7 +114,15 @@ cd ..
 
 Expected last lines: `04_check_data.py` `All 12 checks passed.`,
 `05_check_theory.py` `All 21 checks passed.` (about a minute),
-`07_check_solvers.py` `All 21 checks passed.` (about a minute).
+`07_check_solvers.py` `All 21 checks passed.` (about a minute),
+`09_check_fitting.py` `All 19 checks passed.` (about two minutes).
+
+`10_synthetic_experiments.py` is the long one: about 1,300 profile-likelihood
+fits of 10-20 seconds each, run in parallel (roughly 5 hours on 2 cores, 2.5 on
+4, 1.5 on 8). Its results are included in `results/`, so run as above it finds
+every fit done and only rebuilds the summary tables (about a minute). To redo
+everything from scratch: `python src\10_synthetic_experiments.py --fresh`. If
+interrupted, run it again: finished fits are kept.
 `pdflatex` is run twice so cross-references resolve; the paper is `paper\main.pdf`.
 It needs a local LaTeX installation (MiKTeX or TeX Live); Overleaf works too.
 
@@ -154,6 +186,31 @@ All proved in Section 3 of the paper and checked numerically by `05_check_theory
 | Tails | Numerically, fractional declines approach power laws t^(-alpha) (by t ~ 6000 weeks), but the Caputo SEIR passes through a long transitional phase (slope from -4 to -0.3), so a tail slope from data does NOT estimate alpha. Integer models decline exponentially. |
 | Independent review | Confirmed weights, L1 discretisation and conservation; found the two positivity problems above (now fixed). |
 | For Stage 5 | Bound alpha from below (cost grows like lambda^(1/alpha)); fix the number of sub-steps per fit (avoids small jumps in the likelihood); use alpha <= 0.9999 or exactly 1 in the AHM model. |
+
+## Synthetic experiments (Stage 4): main findings
+
+Data from 8 known mechanisms, fitted with the Caputo SEIR (alpha free).
+alpha* = where the fit converges with unlimited data (Poisson counts).
+
+| Truth | Memory? | alpha* | Rejects alpha = 1 (k = 10 / 100, calibrated) |
+|---|---|---|---|
+| T0 ordinary SEIR | no | 1.000 | 3% / 3% |
+| T1 Erlang stages | no | 0.986 | 17% / 3% |
+| T2 declining transmission | **no** | **0.763** | 60% / 97% |
+| T3 reporting delay | no | 0.983 | 13% / 27% |
+| T4 Caputo alpha = 0.8 | yes | 0.800 | 37% / 97% |
+| T5 Caputo alpha = 0.6 | yes | 0.600 | 100% / 100% |
+| T6 AHM alpha = 0.7 | yes | 0.772 | 53% / 80% |
+| T7 heterogeneous recovery | **no** | **0.810** | 40% / 73% |
+
+- A fitted alpha < 1 is NOT evidence of memory: declining transmission and
+  heterogeneous recovery (no memory) are reported as memory as often as real memory.
+- Proposition 11: the AHM model's memory IS heterogeneity (its Mittag-Leffler
+  survival is a mixture of exponentials).
+- Remark 4: in the Caputo model cumulative infections can fall (S rises after the peak).
+- With noisy counts (k = 10) the nominal 5% test rejects alpha = 1 in 12% of
+  ordinary-SEIR data sets: tests must be calibrated (Stage 5: parametric bootstrap).
+- The fractional fit reports an R0 18-30% larger than the ordinary fit.
 
 ## GitHub
 

@@ -340,6 +340,38 @@ def simulate_seir_beta_t(beta0, rho, kappa, sigma, gamma, N, E0, T, t_eval):
                                 beta_fn=lambda t: M.beta_declining(t, beta0, rho, kappa))
 
 
+def simulate_hetero_seir(beta, sigma, gammas, fractions, N, E0, T, t_eval):
+    """SEIR with HETEROGENEOUS recovery (Section 3.6 (d)): no memory, but a mix.
+
+    On becoming infectious, a fraction fractions[j] of people join class I_j
+    and recover at rate gammas[j]. Each person is memoryless (exponential
+    infectious period), but the population's infectious period is a MIXTURE of
+    exponentials, which has a long tail.
+
+    State: S, E, I_1..I_J, R, CumI (cumulative entries into I).
+    Returns t and a dict with S, E, I (total), R, cumulative.
+    """
+    g = np.asarray(gammas, dtype=float)
+    q = np.asarray(fractions, dtype=float)
+    J = len(g)
+
+    def rhs(t, y):
+        S, E = y[0], y[1]
+        I = y[2:2 + J]
+        inf = beta * S * I.sum() / N
+        entry = sigma * E
+        dI = q * entry - g * I
+        dR = np.sum(g * I)
+        return np.concatenate([[-inf, inf - entry], dI, [dR, entry]])
+
+    y0 = np.zeros(2 + J + 2)
+    y0[0] = N - E0
+    y0[1] = E0
+    tt, Y = solve_ode(rhs, y0, T, t_eval)
+    return tt, {"S": Y[:, 0], "E": Y[:, 1], "I": Y[:, 2:2 + J].sum(axis=1),
+                "R": Y[:, -2], "cumulative": Y[:, -1]}
+
+
 def apply_reporting_delay(weekly_cases, mean, shape, rho_rep=1.0):
     """Expected reported weekly cases: rho_rep * sum_j h_j c_{k-j}  (Section 3.6 (c))."""
     c = np.asarray(weekly_cases, dtype=float)

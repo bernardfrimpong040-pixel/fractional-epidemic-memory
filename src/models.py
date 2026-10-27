@@ -191,6 +191,21 @@ def erlang_early_matrix(beta, sigma, gamma, m_E, m_I):
     return A
 
 
+def beta_for_growth_rate_hetero(r, sigma, gammas, fractions):
+    """SEIR with heterogeneous recovery (fraction q_j recovers at rate g_j):
+    the beta giving growth rate r.
+
+    Euler-Lotka (same argument as Proposition 9): with an exponential latent
+    period and a mixture of exponential infectious periods,
+        1 = beta * sigma/(sigma + r) * sum_j q_j / (g_j + r),
+    so  beta = (sigma + r) / sigma / sum_j q_j / (g_j + r).
+    R0 = beta * (mean infectious period) = beta * sum_j q_j / g_j.
+    """
+    g = np.asarray(gammas, dtype=float)
+    q = np.asarray(fractions, dtype=float)
+    return (sigma + r) / sigma / np.sum(q / (g + r))
+
+
 def beta_declining(t, beta0, rho, kappa):
     """Time-varying transmission: beta(t) = beta0 * (rho + (1 - rho) e^(-kappa t))."""
     return beta0 * (rho + (1.0 - rho) * np.exp(-kappa * np.asarray(t)))
