@@ -294,16 +294,19 @@ def _solve_ahm_grid(omega, tau, alpha, gamma_c, S0, I0, T, h, newton_tol=1e-13):
 # 3. Integer-order models (ordinary differential equations)
 # ===========================================================================
 
-def solve_ode(rhs, y0, T, t_eval, rtol=1e-10, atol=1e-12):
-    """Solve y' = rhs(t, y) with an adaptive Runge-Kutta method (DOP853)."""
-    sol = solve_ivp(rhs, (0.0, T), np.asarray(y0, dtype=float), method="DOP853",
+def solve_ode(rhs, y0, T, t_eval, rtol=1e-10, atol=1e-12, method="DOP853"):
+    """Solve y' = rhs(t, y) with an adaptive method: DOP853 (Runge-Kutta, the
+    default) or LSODA, which switches to an implicit method when the problem is
+    stiff (e.g. one recovery class 10,000 times faster than another; Stage 6)."""
+    sol = solve_ivp(rhs, (0.0, T), np.asarray(y0, dtype=float), method=method,
                     t_eval=t_eval, rtol=rtol, atol=atol)
     if not sol.success:
         raise RuntimeError(sol.message)
     return sol.t, sol.y.T
 
 
-def simulate_erlang_seir(beta, sigma, gamma, N, m_E, m_I, E0, T, t_eval, beta_fn=None):
+def simulate_erlang_seir(beta, sigma, gamma, N, m_E, m_I, E0, T, t_eval, beta_fn=None,
+                         method="DOP853"):
     """SEIR with m_E latent and m_I infectious stages (Section 3.6 (a));
     optional time-varying transmission beta_fn(t) (Section 3.6 (b)).
 
@@ -329,19 +332,20 @@ def simulate_erlang_seir(beta, sigma, gamma, N, m_E, m_I, E0, T, t_eval, beta_fn
     y0 = np.zeros(1 + m_E + m_I + 2)
     y0[0] = N - E0
     y0[1] = E0
-    tt, Y = solve_ode(rhs, y0, T, t_eval)
+    tt, Y = solve_ode(rhs, y0, T, t_eval, method=method)
     return tt, {"S": Y[:, 0], "E": Y[:, 1:1 + m_E].sum(axis=1),
                 "I": Y[:, 1 + m_E:1 + m_E + m_I].sum(axis=1),
                 "R": Y[:, -2], "cumulative": Y[:, -1]}
 
 
-def simulate_seir_beta_t(beta0, rho, kappa, sigma, gamma, N, E0, T, t_eval):
+def simulate_seir_beta_t(beta0, rho, kappa, sigma, gamma, N, E0, T, t_eval, method="DOP853"):
     """Ordinary SEIR with beta(t) = beta0 (rho + (1 - rho) e^(-kappa t))."""
     return simulate_erlang_seir(beta0, sigma, gamma, N, 1, 1, E0, T, t_eval,
-                                beta_fn=lambda t: M.beta_declining(t, beta0, rho, kappa))
+                                beta_fn=lambda t: M.beta_declining(t, beta0, rho, kappa),
+                                method=method)
 
 
-def simulate_hetero_seir(beta, sigma, gammas, fractions, N, E0, T, t_eval):
+def simulate_hetero_seir(beta, sigma, gammas, fractions, N, E0, T, t_eval, method="DOP853"):
     """SEIR with HETEROGENEOUS recovery (Section 3.6 (d)): no memory, but a mix.
 
     On becoming infectious, a fraction fractions[j] of people join class I_j
@@ -368,7 +372,7 @@ def simulate_hetero_seir(beta, sigma, gammas, fractions, N, E0, T, t_eval):
     y0 = np.zeros(2 + J + 2)
     y0[0] = N - E0
     y0[1] = E0
-    tt, Y = solve_ode(rhs, y0, T, t_eval)
+    tt, Y = solve_ode(rhs, y0, T, t_eval, method=method)
     return tt, {"S": Y[:, 0], "E": Y[:, 1], "I": Y[:, 2:2 + J].sum(axis=1),
                 "R": Y[:, -2], "cumulative": Y[:, -1]}
 

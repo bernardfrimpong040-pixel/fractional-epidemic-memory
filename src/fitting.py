@@ -626,19 +626,22 @@ def alt_params(model, z):
     return p
 
 
-def alt_weekly(model, p, K, sigma, gamma):
-    """Weekly increments of cumulative entries into I (population fraction)."""
+def alt_weekly(model, p, K, sigma, gamma, ode_method="DOP853"):
+    """Weekly increments of cumulative entries into I (population fraction).
+    ode_method: "DOP853" (Stage 5) or "LSODA" (Stage 6, faster when stiff)."""
     t_eval = np.arange(K + 1, dtype=float)
     try:
         if model in ("seir", "gfree"):
             g = gamma * p.get("g", 1.0)
-            _, out = S.simulate_erlang_seir(p["beta"], sigma, g, 1.0, 1, 1, p["e0"], K, t_eval)
+            _, out = S.simulate_erlang_seir(p["beta"], sigma, g, 1.0, 1, 1, p["e0"], K, t_eval,
+                                            method=ode_method)
         elif model == "decline":
             _, out = S.simulate_seir_beta_t(p["beta"], p["rho"], p["kappa"], sigma, gamma,
-                                            1.0, p["e0"], K, t_eval)
+                                            1.0, p["e0"], K, t_eval, method=ode_method)
         else:
             gs, qs = hetero_classes(gamma, p["q"], p["c"])
-            _, out = S.simulate_hetero_seir(p["beta"], sigma, gs, qs, 1.0, p["e0"], K, t_eval)
+            _, out = S.simulate_hetero_seir(p["beta"], sigma, gs, qs, 1.0, p["e0"], K, t_eval,
+                                            method=ode_method)
     except (RuntimeError, ValueError, FloatingPointError):
         return None
     m = np.diff(out["cumulative"])
@@ -674,8 +677,9 @@ class AltFitter:
     masked.
     """
 
-    def __init__(self, y, sigma, gamma, model):
+    def __init__(self, y, sigma, gamma, model, ode_method="DOP853"):
         assert model in ALT_MODELS
+        self.ode_method = ode_method
         self.y = np.asarray(y, dtype=float)
         self.K = len(self.y)
         self.mask = np.isfinite(self.y)
@@ -684,7 +688,7 @@ class AltFitter:
 
     def loglik(self, z):
         p = alt_params(self.model, z)
-        m = alt_weekly(self.model, p, self.K, self.sigma, self.gamma)
+        m = alt_weekly(self.model, p, self.K, self.sigma, self.gamma, self.ode_method)
         self.n_solves += 1
         if m is None:
             return -1e12, None
@@ -767,5 +771,6 @@ class AltFitter:
         return out
 
     def fitted_mean(self, z, A):
-        m = alt_weekly(self.model, alt_params(self.model, z), self.K, self.sigma, self.gamma)
+        m = alt_weekly(self.model, alt_params(self.model, z), self.K, self.sigma, self.gamma,
+                       self.ode_method)
         return A * np.maximum(m, M_FLOOR)

@@ -20,8 +20,8 @@ Back-ups: Journal of Mathematical Biology, Chaos, Solitons & Fractals.
 | 3 | Numerical solver: Garrappa predictor-corrector / L1 scheme, Mittag-Leffler convergence test | **done** |
 | 4 | Synthetic tests: does memoryless data give a spurious alpha < 1? | **done** |
 | 5 | Fitting to the seven series: profile likelihoods, bootstrap-calibrated tests, memoryless alternatives | **done** |
-| 6 | AIC comparison and rolling-origin forecasts | next |
-| 7 | Writing, journal template, submission | |
+| 6 | AIC comparison (real and synthetic data) and rolling-origin forecasts | **done** |
+| 7 | Writing, journal template, submission | next |
 
 ## Project layout
 
@@ -50,6 +50,10 @@ Fractional_paper/
     12_check_real_fitting.py  20 checks of the Stage 5 code (all must PASS)
     13_fit_outbreaks.py       Stage 5: fits, sensitivity, pseudo-true alpha, bootstrap
     14_plot_outbreaks.py      Stage 5 figures
+    scoring.py                AIC/AICc, Akaike weights, log score, CRPS, forecast intervals
+    15_check_comparison.py    11 checks of the Stage 6 code (all must PASS)
+    16_compare_forecast.py    Stage 6: AIC (real + synthetic data), rolling-origin forecasts
+    17_plot_comparison.py     Stage 6 figures
   data/
     raw/                      downloads (not on GitHub; re-created by script 01)
     processed/
@@ -85,12 +89,19 @@ Fractional_paper/
     stage5_residuals.csv      randomised quantile residuals
     stage5_summary.csv        one row per series and fractional model (final numbers)
     stage5_sensitivity.csv    alpha-hat for gamma x 0.8 / 1.2, spikes masked, peak + 4 weeks
+    stage6_aic.csv            AIC, AICc, Akaike weights: 6 models x 7 series
+    stage6_synthetic_fits.csv / _aic.csv   memoryless fits to 160 synthetic data sets; which model AIC picks
+    stage6_forecasts.csv      2,304 scored forecasts (series, model, origin, horizon)
+    stage6_forecast_summary.csv / _horizon.csv   mean scores per series/model and per horizon
+    stage6_forecast_ci.csv    95% intervals for overall skill (origins resampled)
   figures/                    data_overview, ebola_cleaning, growth_shape,
                               memory_kernel, identifiability, solver_convergence,
                               matched_epidemics, decline_tails, pseudotrue_profiles,
                               replicate_alpha, test_calibration, example_fits,
                               outbreak_fits, outbreak_profiles, outbreak_bootstrap,
-                              outbreak_sensitivity, outbreak_residuals (.png, .pdf)
+                              outbreak_sensitivity, outbreak_residuals, aic_weights,
+                              synthetic_aic, forecast_scores, forecast_examples,
+                              alpha_by_origin (.png, .pdf)
   paper/                      main.tex + figures/ (not on GitHub until submission)
   requirements.txt
 ```
@@ -124,6 +135,9 @@ python src\11_plot_synthetic.py
 python src\12_check_real_fitting.py
 python src\13_fit_outbreaks.py
 python src\14_plot_outbreaks.py
+python src\15_check_comparison.py
+python src\16_compare_forecast.py
+python src\17_plot_comparison.py
 cd paper
 pdflatex main.tex
 pdflatex main.tex
@@ -134,7 +148,8 @@ Expected last lines: `04_check_data.py` `All 12 checks passed.`,
 `05_check_theory.py` `All 21 checks passed.` (about a minute),
 `07_check_solvers.py` `All 21 checks passed.` (about a minute),
 `09_check_fitting.py` `All 19 checks passed.` (about two minutes),
-`12_check_real_fitting.py` `All 20 checks passed.` (about three minutes).
+`12_check_real_fitting.py` `All 20 checks passed.` (about three minutes),
+`15_check_comparison.py` `All 11 checks passed.` (about two minutes).
 
 `10_synthetic_experiments.py` is the long one: about 1,300 profile-likelihood
 fits of 10-20 seconds each, run in parallel (roughly 5 hours on 2 cores, 2.5 on
@@ -145,6 +160,8 @@ interrupted, run it again: finished fits are kept.
 `13_fit_outbreaks.py` is the other long one (about 1,100 fits, roughly 7 hours on
 2 cores); its results are included too, so it also only rebuilds the summaries.
 `--skip-bootstrap` leaves out the bootstrap (minutes instead of hours).
+`16_compare_forecast.py` (about 1,250 fits, roughly 3 hours on 2 cores) also has
+its results included and is resumable.
 `pdflatex` is run twice so cross-references resolve; the paper is `paper\main.pdf`.
 It needs a local LaTeX installation (MiKTeX or TeX Live); Overleaf works too.
 
@@ -262,6 +279,28 @@ ordinary SEIR (60 data sets; "<0.02" = none reached the real statistic).
 - Even data simulated from the ordinary SEIR give alpha-hat < 0.9 in 38% of cases.
 - The Caputo profile can jump at alpha = 1 (long near-zero tails penalise the
   power-law tail of every alpha < 1).
+
+## Model comparison and forecasts (Stage 6): main findings
+
+| Series | Lowest AICc (weight) | Forecast CRPS vs SEIR: Caputo / heterogeneous |
+|---|---|---|
+| mpox, US | Caputo (0.96) | **0.57** / 0.62 |
+| Ebola, Guinea | SEIR, gamma estimated (0.45) | 1.00 / 0.98 |
+| Ebola, Liberia | ordinary SEIR (0.49) | 1.00 / 1.00 |
+| Ebola, Sierra Leone | ordinary SEIR (0.50) | 1.00 / 1.00 |
+| Measles, West Texas | SEIR, gamma estimated (0.43) | 0.83 / 0.89 |
+| Measles, Upstate SC | Caputo (0.36) | 0.99 / 1.00 |
+| Measles, Short Creek | ordinary SEIR (0.37) | 0.92 / 1.01 |
+
+- Synthetic data with a known truth: AICc recognises declining transmission and
+  rarely invents memory (T0, T1, T3: Caputo best in <= 2 of 10), but confuses
+  memory with heterogeneous recovery (T7 at k = 10: Caputo best 4/10, truth 1/10).
+- Forecasts (101 origins, 1-4 weeks ahead): the Caputo model has the lowest CRPS
+  overall (0.89 of SEIR's, 95% interval 0.75-1.02), mostly from mpox; by log score
+  heterogeneous recovery is best. Without mpox no model clearly beats SEIR. The
+  fitted alpha jumps between 0.4 and 1 from one origin to the next: a flexible
+  shape parameter, not a measured memory.
+- All plug-in forecasts are overconfident: 90% intervals cover only 54-65%.
 
 ## GitHub
 
